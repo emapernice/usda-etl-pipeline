@@ -1,0 +1,28 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# --- Virtual Environment ---
+venv/
+.venv/
+
+# --- Data & Logs ---
+data/
+logs/
+
+# --- Configs & Secrets ---
+.env
+config/*.env
+config/api_keys.json
+config/db_config.json
+
+# --- System Files ---
+.DS_Store
+
+# --- Jupyter / Backups ---
+*.ipynb_checkpoints
+*.bak
+*.tmp
