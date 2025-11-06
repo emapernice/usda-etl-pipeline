@@ -15,21 +15,26 @@ This project builds a complete **ETL pipeline** to extract, transform, and load 
 
 ## Project Structure
 
-agrodata/
+
+usda-etl-pipeline/
 │
 ├── config/
 │ ├── .env # Environment variables (not tracked in git)
-│ ├── db_config.json.example
-│ └── api_keys.json.example
+│ ├── db_config.json.example 
+│ └── api_keys.json.example 
 │
 ├── data/
 │ ├── raw/ # Raw JSON files from the USDA API
 │ └── processed/ # Cleaned CSV files ready for load
 │
-├── extract.py # API data extraction logic
-├── transform.py # Data cleaning and transformation
-├── load.py # Database loading logic
-├── run_etl.py # Main ETL pipeline entry point
+├── sql/
+│   └── schema.sql 
+│
+├── src/
+│ ├── extract.py # API data extraction logic
+│ ├── transform.py # Data cleaning and transformation
+│ ├── load.py # Database loading logic
+│ └── run_etl.py # Main ETL pipeline entry point
 │
 ├── requirements.txt
 ├── .gitignore
@@ -43,7 +48,7 @@ git clone https://github.com/yourusername/usda-crop-insights.git
 cd usda-crop-insights
 
 2 - Create and activate a virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate   # On macOS/Linux
 venv\Scripts\activate      # On Windows
 
@@ -59,7 +64,7 @@ MYSQL_DATABASE=usda_data
 USDA_API_KEY=your_usda_api_key
 
 5 - Run the ETL pipeline
-python run_etl.py
+python src/run_etl.py
 
 
 📊 Example Outputs

@@ -15,20 +15,26 @@ Este proyecto desarrolla un **pipeline ETL completo** para **extraer, transforma
 
 ##  Estructura del Proyecto
 
-├── extract.py       # Descarga datos desde la API del USDA
-├── transform.py     # Limpia, normaliza y valida los datos
-├── load.py          # Carga los datos procesados en MySQL
-├── run_etl.py       # Script principal del pipeline
-│
-├── data/
-│   ├── raw/         # Datos JSON originales desde la API
-│   └── processed/   # Archivos CSV procesados listos para cargar
+
+usda-etl-pipeline/
 │
 ├── config/
-│   ├── .env         # Variables de entorno (credenciales y API keys)
-│   └── db_config.json
+│ ├── .env # Variables de entorno (no incluidas en git)
+│ ├── db_config.json.example 
+│ └── api_keys.json.example 
 │
-├── logs/            # Registros de ejecución (opcional)
+├── data/
+│ ├── raw/ # Datos JSON originales desde la API
+│ └── processed/ # Archivos CSV limpios listos para cargar
+│
+├── sql/
+│   └── schema.sql 
+│
+├── src/
+│ ├── extract.py    # Descarga datos desde la API del USDA
+│ ├── transform.py  # Limpia, normaliza y valida los datos
+│ ├── load.py       # Carga los datos procesados en MySQL
+│ └── run_etl.py    # Script principal del pipeline
 │
 ├── requirements.txt
 ├── .gitignore
@@ -43,7 +49,7 @@ git clone https://github.com/tuusuario/usda-crop-insights.git
 cd usda-crop-insights
 
 2 - Crear y activar un entorno virtual
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate   # En macOS/Linux
 venv\Scripts\activate      # En Windows
 
@@ -60,7 +66,7 @@ USDA_API_KEY=tu_api_key
 
 
 5 - Ejecutar el pipeline ETL
-python run_etl.py
+python src/run_etl.py
 
 
 📊 Ejemplo de Resultados
