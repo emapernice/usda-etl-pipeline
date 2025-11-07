@@ -31,10 +31,15 @@ usda-etl-pipeline/
 │   └── schema.sql 
 │
 ├── src/
-│ ├── extract.py # API data extraction logic
-│ ├── transform.py # Data cleaning and transformation
-│ ├── load.py # Database loading logic
-│ └── run_etl.py # Main ETL pipeline entry point
+│ ├── extract.py 
+│ ├── transform.py 
+│ ├── load.py 
+│ ├── run_etl.py 
+│ └── api/
+│   ├── main.py   
+│   ├── db.py            
+│   └── routes/
+│       └── prices.py   
 │
 ├── requirements.txt
 ├── .gitignore
@@ -81,6 +86,11 @@ FROM usda_observations
 WHERE commodity_desc = 'SOYBEANS'
 GROUP BY year, commodity_desc
 ORDER BY year;
+
+## API Layer (FastAPI)
+
+After the ETL pipeline stores cleaned USDA data into the MySQL database,
+this FastAPI service allows querying the processed results.
 
 📈 Future Improvements
 
