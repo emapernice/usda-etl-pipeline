@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import prices
+from routes import prices, stats, health
 
 app = FastAPI(
     title="USDA ETL API",
@@ -8,6 +8,8 @@ app = FastAPI(
 )
 
 app.include_router(prices.router)
+app.include_router(stats.router)
+app.include_router(health.router)
 
 @app.get("/", tags=["Root"])
 def read_root():

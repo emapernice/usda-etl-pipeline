@@ -84,7 +84,7 @@ Variación interanual de precios
 Comparación regional entre estados
 Ejemplo de consulta SQL:
 
-SELECT year, commodity_desc, AVG(value) AS precio_promedio
+SELECT year, commodity_desc, AVG(price) AS precio_promedio
 FROM usda_observations
 WHERE commodity_desc = 'SOYBEANS'
 GROUP BY year, commodity_desc

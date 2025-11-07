@@ -81,7 +81,7 @@ Year-over-year price changes
 Regional performance comparisons
 Example SQL query:
 
-SELECT year, commodity_desc, AVG(value) AS avg_price
+SELECT year, commodity_desc, AVG(price) AS avg_price
 FROM usda_observations
 WHERE commodity_desc = 'SOYBEANS'
 GROUP BY year, commodity_desc
