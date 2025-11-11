@@ -95,8 +95,8 @@ this FastAPI service allows querying the processed results.
 📈 Future Improvements
 
 Integrate data visualization dashboards (Streamlit or Plotly Dash)
-Expand commodity coverage (e.g., Wheat, Cotton)
-Schedule automatic updates via Linux CRON jobs
+Add user-friendly filters and summary statistics.
+Optionally deploy the full ETL + API + Dashboard stack online for demonstration.
 
 👨‍💻 Author
 

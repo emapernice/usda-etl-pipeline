@@ -96,10 +96,9 @@ Una vez que el pipeline ETL almacena los datos limpios del USDA en la base de da
 
 📈 Mejoras Futuras
 
-Integrar dashboards visuales con Streamlit o Plotly Dash
-Ampliar la cobertura a otros cultivos (trigo, algodón, maíz, etc.)
-Automatizar la ejecución con tareas programadas en CRON
-
+Integrar un panel interactivo de visualización de datos (Streamlit o Plotly Dash).
+Agregar filtros fáciles de usar y estadísticas resumidas.
+Opcionalmente desplegar en línea todo el sistema ETL + API + Dashboard para demostración.
 
 👨‍💻 Autor
 
