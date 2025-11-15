@@ -6,19 +6,23 @@ from db import get_db
 router = APIRouter(prefix="/stats", tags=["Statistics"])
 
 
+# -----------------------------------------------------------
+# SUMMARY: avg/min/max grouped by commodity
+# -----------------------------------------------------------
+
 @router.get("/summary")
 def get_price_summary(db: Session = Depends(get_db)):
     """
-    Returns average, minimum, and maximum prices grouped by commodity.
+    Returns average, minimum, and maximum price per ton grouped by commodity.
     """
     try:
         sql = text("""
             SELECT 
                 commodity_desc,
                 COUNT(*) AS records,
-                ROUND(AVG(price), 2) AS avg_price,
-                ROUND(MIN(price), 2) AS min_price,
-                ROUND(MAX(price), 2) AS max_price
+                ROUND(AVG(price_usd_per_ton), 2) AS avg_price,
+                ROUND(MIN(price_usd_per_ton), 2) AS min_price,
+                ROUND(MAX(price_usd_per_ton), 2) AS max_price
             FROM usda_observations
             GROUP BY commodity_desc
             ORDER BY avg_price DESC
@@ -31,6 +35,10 @@ def get_price_summary(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Server error: {e}")
 
 
+# -----------------------------------------------------------
+# AVERAGE: with optional filters (year, state, commodity)
+# -----------------------------------------------------------
+
 @router.get("/average")
 def get_average_price(
     year: int | None = Query(None, description="Filter by year"),
@@ -39,12 +47,7 @@ def get_average_price(
     db: Session = Depends(get_db),
 ):
     """
-    Returns the average price optionally filtered by year, state, or commodity.
-    Examples:
-      /stats/average?year=2023
-      /stats/average?state=IA
-      /stats/average?commodity=CORN
-      /stats/average?year=2023&state=IA&commodity=SOYBEANS
+    Returns average, min, max price per ton with optional filters.
     """
     try:
         where_clauses = []
@@ -53,9 +56,11 @@ def get_average_price(
         if year:
             where_clauses.append("year = :year")
             params["year"] = year
+
         if state:
             where_clauses.append("state_name = :state")
             params["state"] = state.upper()
+
         if commodity:
             where_clauses.append("commodity_desc = :commodity")
             params["commodity"] = commodity.upper()
@@ -65,9 +70,9 @@ def get_average_price(
         sql = text(f"""
             SELECT 
                 COUNT(*) AS records,
-                ROUND(AVG(price), 2) AS avg_price,
-                ROUND(MIN(price), 2) AS min_price,
-                ROUND(MAX(price), 2) AS max_price
+                ROUND(AVG(price_usd_per_ton), 2) AS avg_price,
+                ROUND(MIN(price_usd_per_ton), 2) AS min_price,
+                ROUND(MAX(price_usd_per_ton), 2) AS max_price
             FROM usda_observations
             {where_sql}
         """)
