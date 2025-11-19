@@ -7,55 +7,78 @@ from load import upsert_dataframe
 
 
 def clean_old_data():
-    """Remove previous raw and processed data before running a new ETL."""
+    """
+    Deletes old ETL data before running a new pipeline.
+    This ensures the process always works with fresh files.
+    """
     raw_folder = "data/raw"
+    processed_file = "data/processed/usda_processed.csv"
+
+    # Delete data/raw folder if it exists
     if os.path.exists(raw_folder):
         shutil.rmtree(raw_folder)
-        print("Removed old raw data folder: data/raw")
+        print("Removed data/raw folder")
 
-    processed_file = "data/processed/usda_processed.csv"
+    # Delete the processed CSV if it exists
     if os.path.exists(processed_file):
         os.remove(processed_file)
-        print("Removed old processed file: data/processed/usda_processed.csv")
+        print("Removed usda_processed.csv")
 
 
 def main():
-    try:
-        print("Starting USDA ETL pipeline...\n")
+    print("     USDA ETL PIPELINE")
 
+    try:
+        # Clean previous data before starting
         clean_old_data()
 
+        # Parameters used for API requests
         commodities = ["SOYBEANS", "CORN", "WHEAT"]
         metrics = ["PRICE RECEIVED", "PRODUCTION", "YIELD"]
         states = ["IA", "IL", "MN", "NE", "SD"]
 
-        print(f"Starting extraction for {len(commodities) * len(metrics) * len(states)} combinations...\n")
+        # Create all possible combinations
+        combinations = [
+            (c, m, s) for c in commodities for m in metrics for s in states
+        ]
 
-        for i, (commodity, metric, state) in enumerate(
-            [(c, m, s) for c in commodities for m in metrics for s in states], start=1
-        ):
-            print(f"[{i}/{len(commodities) * len(metrics) * len(states)}]")
-            fetch_usda_data(
-                commodity=commodity,
-                metric=metric,
-                state=state,
-                year_from=2020,
-                year_to=2024
-            )
+        print(f"Starting extraction for {len(combinations)} combinations...\n")
 
-        print("\nCompleted extraction.\n")
+        # EXTRACTION
+        for i, (commodity, metric, state) in enumerate(combinations, start=1):
+            print(f"({i}/{len(combinations)}) Fetching {commodity} - {metric} - {state}")
 
+            try:
+                # API request
+                fetch_usda_data(
+                    commodity=commodity,
+                    metric=metric,
+                    state=state,
+                    year_from=2020,
+                    year_to=2024
+                )
+            except Exception as error:
+                # A failure in one combination does not stop the whole ETL
+                print(f"Error fetching {commodity}-{metric}-{state}: {error}")
+                continue
+
+        print("\nExtraction completed.\n")
+
+        # TRANSFORMATION
         df = process_all_raw()
+
         if df.empty:
-            print("No valid data to load. Exiting pipeline.")
+            print("No valid data processed. ETL finished with no load.")
             return
 
+        # LOAD
+        print("Loading data into MySQL...\n")
         upsert_dataframe(df, clean_before_insert=True)
 
-        print("\nETL pipeline completed successfully!")
+        print("        ETL DONE")
 
     except Exception as e:
-        print(f"\nError running ETL pipeline: {e}")
+        print(f"\nGeneral ETL error: {e}")
         sys.exit(1)
 
 
