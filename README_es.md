@@ -11,41 +11,6 @@ Este proyecto desarrolla un **pipeline ETL completo** para **extraer, transforma
 - **Tecnologías utilizadas:** Python · Pandas · SQLAlchemy · MySQL · Matplotlib
 - **Enfoque:** Automatización ETL real y análisis exploratorio de datos (EDA)
 
----
-
-##  Estructura del Proyecto
-
-
-usda-etl-pipeline/
-│
-├── config/
-│ ├── .env # Variables de entorno (no incluidas en git)
-│ ├── db_config.json.example 
-│ └── api_keys.json.example 
-│
-├── data/
-│ ├── raw/ # Datos JSON originales desde la API
-│ └── processed/ # Archivos CSV limpios listos para cargar
-│
-├── sql/
-│   └── schema.sql 
-│
-├── src/
-│ ├── extract.py     # Descarga datos desde la API del USDA
-│ ├── transform.py   # Limpia, normaliza y valida los datos
-│ ├── load.py        # Carga los datos procesados en MySQL
-│ ├── run_etl.py     # Script principal del pipeline
-│ └── api/
-│   ├── main.py   
-│   ├── db.py            
-│   └── routes/
-│       └── prices.py   
-│
-├── requirements.txt
-├── .gitignore
-└── README.md
-
-
 
 ⚙️ Instrucciones de Instalación
 
