@@ -5,7 +5,22 @@ from dotenv import load_dotenv
 import os
 import plotly.express as px
 
-# Load environment variables
+
+# 📌 FORMATTER — Abreviar números grandes (K, M, B)
+
+def format_number(n):
+    if n >= 1_000_000_000:
+        return f"{n/1_000_000_000:.1f}B"
+    elif n >= 1_000_000:
+        return f"{n/1_000_000:.1f}M"
+    elif n >= 1_000:
+        return f"{n/1_000:.1f}K"
+    else:
+        return f"{n:.0f}"
+
+
+# 🔧 CONFIGURACIÓN INICIAL
+
 load_dotenv("config/.env")
 
 MYSQL_USER = os.getenv("MYSQL_USER")
@@ -16,7 +31,6 @@ MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
 MYSQL_URI = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DATABASE}"
 engine = create_engine(MYSQL_URI)
 
-# Streamlit Configuration
 st.set_page_config(
     page_title="USDA Dashboard",
     page_icon="🌽",
@@ -24,9 +38,11 @@ st.set_page_config(
 )
 
 st.title("🌾 USDA Crop Analytics Dashboard")
-st.markdown("Analyze **Prices**, **Production**, and **Yield** from USDA data.")
+st.markdown("Analyze **Prices**, **Production**, and **Yield** from USDA agricultural data.")
 
-# Load data from MySQL
+
+# 📥 LOAD DATA
+
 @st.cache_data
 def load_data():
     query = """
@@ -46,7 +62,9 @@ def load_data():
 
 df = load_data()
 
-# Sidebar Filters
+
+# 🎛️ SIDEBAR FILTERS
+
 st.sidebar.header("🔍 Filters")
 
 states = sorted(df["state_name"].dropna().unique())
@@ -65,10 +83,80 @@ if selected_commodity != "All":
 if selected_year != "All":
     filtered_df = filtered_df[filtered_df["year"] == int(selected_year)]
 
-# Report Sections
-st.subheader("📈 1️⃣ Price Received by Year (Stacked Area)")
 
-price_df = filtered_df[filtered_df["statisticcat_desc"] == "PRICE RECEIVED"]
+# 📊 KPI SECTION
+
+st.markdown("## 📊 Key Performance Indicators (KPIs)")
+col1, col2, col3 = st.columns(3)
+
+# ---- KPI DATA PREP ----
+price_df = filtered_df[filtered_df["statisticcat_desc"] == "PRICE RECEIVED"].sort_values("year")
+prod_df = filtered_df[filtered_df["statisticcat_desc"] == "PRODUCTION"]
+yield_df = filtered_df[filtered_df["statisticcat_desc"] == "YIELD"]
+
+
+# KPI 1 — YEAR-OVER-YEAR PRICE CHANGE
+
+if not price_df.empty and len(price_df["year"].unique()) >= 2:
+    latest_year = price_df["year"].max()
+    prev_year = latest_year - 1
+
+    latest_value = price_df[price_df["year"] == latest_year]["value"].mean()
+    prev_value = price_df[price_df["year"] == prev_year]["value"].mean()
+
+    if pd.notna(latest_value) and pd.notna(prev_value):
+        yoy_change = ((latest_value - prev_value) / prev_value) * 100
+    else:
+        yoy_change = None
+else:
+    yoy_change = None
+
+with col1:
+    st.metric(
+        label="📉 Price YoY Change",
+        value=f"{yoy_change:.2f} %" if yoy_change is not None else "N/A"
+    )
+
+
+# KPI 2 — LATEST PRICE
+
+if not price_df.empty:
+    latest_year = price_df["year"].max()
+    latest_price = price_df[price_df["year"] == latest_year]["value"].mean()
+else:
+    latest_price = None
+
+with col2:
+    st.metric(
+        label="💰 Latest Price",
+        value=f"{latest_price:.2f}" if latest_price is not None else "N/A"
+    )
+
+
+# KPI 3 — TOP PRODUCING STATE (FORMATTED)
+
+if selected_state == "All":
+    prod_rank = prod_df.groupby("state_name")["value"].sum().sort_values(ascending=False)
+
+    if not prod_rank.empty:
+        top_state = prod_rank.index[0]
+        top_value = prod_rank.iloc[0]
+        formatted_value = format_number(top_value)
+
+        kpi3_text = f"{top_state} — {formatted_value}"
+    else:
+        kpi3_text = "N/A"
+else:
+    kpi3_text = "State filter applied"
+
+with col3:
+    st.metric(label="🥇 Top Producing State", value=kpi3_text)
+
+
+# 📈 VISUALIZATIONS
+
+# ---- PRICE RECEIVED ----
+st.subheader("📈 1️⃣ Price Received by Year (Stacked Area)")
 
 if not price_df.empty:
     fig = px.area(
@@ -82,9 +170,8 @@ if not price_df.empty:
 else:
     st.info("No price data available for selected filters.")
 
-
+# ---- PRODUCTION ----
 st.subheader("🌾 2️⃣ Total Production by Year")
-prod_df = filtered_df[filtered_df["statisticcat_desc"] == "PRODUCTION"]
 
 if not prod_df.empty:
     fig = px.bar(
@@ -94,12 +181,12 @@ if not prod_df.empty:
         color="commodity_desc",
         title="Production Volume by Year"
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No production data available for selected filters.")
 
+# ---- YIELD ----
 st.subheader("🌱 3️⃣ Average Yield (Grouped Bars)")
-yield_df = filtered_df[filtered_df["statisticcat_desc"] == "YIELD"]
 
 if not yield_df.empty:
     fig = px.bar(
@@ -115,9 +202,10 @@ else:
     st.info("No yield data available for selected filters.")
 
 
-# Data Table
+# 📄 RAW DATA TABLE
+
 st.subheader("🧾 Raw Filtered Data")
-st.dataframe(filtered_df, width="stretch")
+st.dataframe(filtered_df, use_container_width=True)
 
 st.markdown("---")
 st.caption("USDA Data Dashboard — Streamlit + SQLAlchemy + Plotly")

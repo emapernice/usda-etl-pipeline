@@ -1,3 +1,4 @@
+streamlit
 pandas
 requests
 sqlalchemy
@@ -5,3 +6,4 @@ pymysql
 python-dotenv
 tqdm
 matplotlib
+plotly
