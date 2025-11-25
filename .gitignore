@@ -11,6 +11,9 @@ venv/
 
 # --- Data & Logs ---
 data/
+!data/processed/
+!data/processed/usda_processed.csv
+
 logs/
 
 # --- Configs & Secrets ---
@@ -26,6 +29,3 @@ config/db_config.json
 *.ipynb_checkpoints
 *.bak
 *.tmp
-
-# Allow USDA CSV for Streamlit
-!data/processed/usda_processed.csv

@@ -1,13 +1,9 @@
 import streamlit as st
 import pandas as pd
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
 import plotly.express as px
 
 
 # 📌 FORMATTER — Abreviar números grandes (K, M, B)
-
 def format_number(n):
     if n >= 1_000_000_000:
         return f"{n/1_000_000_000:.1f}B"
@@ -19,18 +15,7 @@ def format_number(n):
         return f"{n:.0f}"
 
 
-# 🔧 CONFIGURACIÓN INICIAL
-
-load_dotenv("config/.env")
-
-MYSQL_USER = os.getenv("MYSQL_USER")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
-MYSQL_HOST = os.getenv("MYSQL_HOST")
-MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
-
-MYSQL_URI = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DATABASE}"
-engine = create_engine(MYSQL_URI)
-
+# 🔧 STREAMLIT CONFIG
 st.set_page_config(
     page_title="USDA Dashboard",
     page_icon="🌽",
@@ -41,30 +26,23 @@ st.title("🌾 USDA Crop Analytics Dashboard")
 st.markdown("Analyze **Prices**, **Production**, and **Yield** from USDA agricultural data.")
 
 
-# 📥 LOAD DATA
-
+# 📥 LOAD DATA FROM CSV
 @st.cache_data
 def load_data():
-    query = """
-        SELECT 
-            year,
-            state_name,
-            commodity_desc,
-            statisticcat_desc,
-            unit_desc,
-            value
-        FROM usda_observations
-        WHERE value IS NOT NULL
-        ORDER BY year ASC
-    """
-    df = pd.read_sql(query, engine)
+    csv_path = "data/processed/usda_processed.csv"
+    df = pd.read_csv(csv_path)
+
+    # Ensure correct dtypes
+    df["year"] = df["year"].astype(int)
+    df["value"] = pd.to_numeric(df["value"], errors="coerce")
+
     return df
+
 
 df = load_data()
 
 
 # 🎛️ SIDEBAR FILTERS
-
 st.sidebar.header("🔍 Filters")
 
 states = sorted(df["state_name"].dropna().unique())
@@ -85,7 +63,6 @@ if selected_year != "All":
 
 
 # 📊 KPI SECTION
-
 st.markdown("## 📊 Key Performance Indicators (KPIs)")
 col1, col2, col3 = st.columns(3)
 
@@ -96,7 +73,6 @@ yield_df = filtered_df[filtered_df["statisticcat_desc"] == "YIELD"]
 
 
 # KPI 1 — YEAR-OVER-YEAR PRICE CHANGE
-
 if not price_df.empty and len(price_df["year"].unique()) >= 2:
     latest_year = price_df["year"].max()
     prev_year = latest_year - 1
@@ -119,7 +95,6 @@ with col1:
 
 
 # KPI 2 — LATEST PRICE
-
 if not price_df.empty:
     latest_year = price_df["year"].max()
     latest_price = price_df[price_df["year"] == latest_year]["value"].mean()
@@ -134,7 +109,6 @@ with col2:
 
 
 # KPI 3 — TOP PRODUCING STATE (FORMATTED)
-
 if selected_state == "All":
     prod_rank = prod_df.groupby("state_name")["value"].sum().sort_values(ascending=False)
 
@@ -203,9 +177,8 @@ else:
 
 
 # 📄 RAW DATA TABLE
-
 st.subheader("🧾 Raw Filtered Data")
 st.dataframe(filtered_df, use_container_width=True)
 
 st.markdown("---")
-st.caption("USDA Data Dashboard — Streamlit + SQLAlchemy + Plotly")
+st.caption("USDA Data Dashboard — Streamlit + Plotly — CSV Version")
